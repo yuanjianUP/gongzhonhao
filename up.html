@@ -1,0 +1,467 @@
+var url = "https://ulink.game.qq.com/app/1017/bdfc83b47372ff82/index.php";
+//var url = "https://jerry.qq.com/2018/a20181217live/php/index.php";
+var userData = null;
+var LoginManager = ulink.LoginManager;
+var sMessage;
+var useropenid
+
+
+LoginManager.checkLogin(function (userInfo) {
+
+    $("#logined").show();
+    $("#unlogin").hide();
+    if (userInfo.def_nickname) {
+        $("#userinfo").html(userInfo.def_nickname);
+    } else {
+        $("#userinfo").html(userInfo.nickName);
+    }
+    userData = userInfo;
+    //console.log(userData);
+
+}, function () {
+    if (ulink.isWxApp()) {
+        LoginManager.loginByWx();
+        return ;
+    }
+
+    if(ulink.isQQApp() !=true || ulink.isWxApp() !=true) {
+        $("#unlogin").show();
+    }
+    else{
+        $("#unlogin").hide();
+    }
+    
+    $("#logined").hide();
+   
+  
+});
+
+LoginManager.init({
+    //鏀寔闈炲井淇＄幆澧冩媺璧峰井淇PP鐨凮penLink閾炬帴
+    openLinkUrl: 'https://game.weixin.qq.com/cgi-bin/comm/openlink?noticeid=90196474&appid=wx18df700cb9d0652e&url=https%3A%2F%2Fmir.qq.com%2Fact%2F1010%2F721a4a4f29197a64%2Findex.html#wechat_redirect'
+});
+if( ulink.isWxApp() ){
+    $("#login_wx").show();
+}
+
+//0=>"灏忔偊鍎�",1=>"钀屽疂灏忕传閲�",2=>"浣冲効",3=>"娆ｆ",4=>"灏忛箍",5=>"瀵勫勾",6=>"鍕惧嬀",7=>"灏忚檸鐗�"
+var zhuBoInfo = [{
+    name: "灏忔偊鍎�",
+    shenGao: 170,
+    sanWei: "36D/65/98",
+    zhiboID: "351039226",
+    src: "ossweb-img/zb3.jpg",
+},
+{
+    name: "钀屽疂灏忕传閲�",
+    shenGao: 160,
+    sanWei: "86/65/90",
+    zhiboID: "275022",
+    src: "ossweb-img/zb5.jpg",
+},
+{
+    name: "浣冲効",
+    shenGao: 165,
+    sanWei: "95/69/97",
+    zhiboID: "358309536",
+    src: "ossweb-img/zb6.jpg",
+},
+{
+    name: "娆ｆ",
+    shenGao: 173,
+    sanWei: "96/88/88",
+    zhiboID: "199648443",
+    src: "ossweb-img/zb4.jpg",
+},
+{
+    name: "灏忛箍",
+    shenGao: 164,
+    sanWei: "86/60/90",
+    zhiboID: "173851088",
+    src: "ossweb-img/zb1.jpg",
+},
+{
+    name: "瀵勫勾",
+    shenGao: 160,
+    sanWei: "86/65/90",
+    zhiboID: "527712866",
+    src: "ossweb-img/zb2.jpg",
+},
+{
+    name: "鍕惧嬀",
+    shenGao: 170,
+    sanWei: "88/60/85",
+    zhiboID: "527501293",
+    src: "ossweb-img/zb8.jpg",
+},
+{
+    name: "灏忚檸鐗�",
+    shenGao: 162,
+    sanWei: "86/63/90",
+    zhiboID: "527553987",
+    src: "ossweb-img/zb7.jpg",
+},
+];
+
+
+
+
+
+//寮€濮嬫娊濂杔ottery->js
+function callJsToStart() {
+
+    if (userData == null) {
+        ulink.Dialog.alert("璇峰厛鐧婚檰浠ュ悗鍐嶆潵浣撻獙锛�");
+        return;
+    }
+    ulink.http.get({
+        url: url + '?route=Reward/selLottery&game=mir&iActId=1010',
+        success: function (res) {
+
+            console.log(res);
+
+            if (res.iRet != 0) {
+                ulink.Dialog.alert(res.sMsg);
+                ulink.setCookie(userData.openid, '1', 86400, window.location.host, "/");
+
+                return;
+            }
+            sMessage = res.sMsg;
+            calllotteryToRoll(res.jData.index);
+        },
+        error: function () {
+            alert("鍒濆鍖栧け璐�");
+            return;
+        }
+    });
+
+    PTTSendClick('lottery', 'start', '鎶藉_寮€濮�');
+}
+//寮€鍙戣幏寰楁娊濂栫粨鏋� 閫氱煡lottery寮€濮嬫挱鏀炬晥鏋� js->lottery
+function calllotteryToRoll(id) {
+
+
+    if (lottery) lottery.stopRoll(id);
+
+    PTTSendClick('lottery', 'reward_' + id, '鎶藉_濂栧搧_' + id);
+
+}
+//鍔ㄧ敾瀹屾垚閫氱煡js  lottery->js
+function callJsToComplete() {
+
+    ulink.Dialog.alert(sMessage);
+
+
+    PTTSendClick('lottery', 'end', '鎶藉_瀹屾瘯');
+}
+
+function loginClick(obj) {
+    var id = $(obj).attr("id");
+    if (id == "ptLoginBtn") LoginManager.login();
+    if (id == "wxloginBtn") LoginManager.loginByWx();
+   
+}
+function loginOut() {
+    LoginManager.logout(function () {
+        window.location.reload();
+    });
+}
+function clickLottery() {
+
+    callJsToStart();
+    //alert(11);
+
+    return;
+}
+function getAllRewardInfo() {
+    ulink.http.get({
+        url: url + '?route=Reward/getReward&game=mir&iActId=1010',
+        success: function (res) {
+            setRewardList(res);
+        },
+        error: function () {
+            alert("鍒濆鍖栧け璐�");
+            return;
+        }
+    });
+}
+getAllRewardInfo();
+
+function setRewardList(res) {
+
+
+
+    if (res.iRet) {
+        return;
+    }
+
+    $("#rewardlist").html("");
+
+
+    var strhtml = "";
+   
+    for (var i = 0; i < res.jData.length; i++) {
+        var msgData = JSON.parse(res.jData[i]);
+        console.log(msgData);
+
+        var data = zhuBoInfo[msgData.index];
+
+        strhtml += '<div class="ul-box">';
+        strhtml += '<p class="user-name flex"><span class="player">鐜╁</span> <span class="zhub">涓绘挱</span></p>';
+        strhtml += '<ul class="flex">';
+        strhtml += ' <li class="user-bg">';
+        strhtml += '<!--<img src="ossweb-img/zb1.jpg" alt="" />-->';
+        strhtml += ' <p class="day"><em>'+msgData.team +'</em>闃熼暱<br><em class="red">'+msgData.name +'</em></p>';
+        strhtml += '</li>';
+        strhtml += '<li  class="zb-bg">';
+        strhtml += ' <img src="' + data.src + '" alt="" />';
+        strhtml += '  <div class="zb-txt">';
+        strhtml += '  <b>' + data.name + '</b>';
+        strhtml += ' <p>韬珮锛�<br>' + data.shenGao + ' </br>涓夊洿锛�<br>' + data.sanWei + '</br>鐩存挱ID锛�</br>' + data.zhiboID + '</p>';
+        strhtml += '</div>';
+        strhtml += '</li>';
+        strhtml += '</ul>';
+        strhtml += '</div>';
+    }
+
+
+    $("#rewardlist").html(strhtml);
+   
+
+
+
+
+var url = "https://ulink.game.qq.com/app/1017/bdfc83b47372ff82/index.php";
+//var url = "https://jerry.qq.com/2018/a20181217live/php/index.php";
+var userData = null;
+var LoginManager = ulink.LoginManager;
+var sMessage;
+var useropenid
+
+
+LoginManager.checkLogin(function (userInfo) {
+
+    $("#logined").show();
+    $("#unlogin").hide();
+    if (userInfo.def_nickname) {
+        $("#userinfo").html(userInfo.def_nickname);
+    } else {
+        $("#userinfo").html(userInfo.nickName);
+    }
+    userData = userInfo;
+    //console.log(userData);
+
+}, function () {
+    if (ulink.isWxApp()) {
+        LoginManager.loginByWx();
+        return ;
+    }
+
+    if(ulink.isQQApp() !=true || ulink.isWxApp() !=true) {
+        $("#unlogin").show();
+    }
+    else{
+        $("#unlogin").hide();
+    }
+    
+    $("#logined").hide();
+   
+  
+});
+
+LoginManager.init({
+    //鏀寔闈炲井淇＄幆澧冩媺璧峰井淇PP鐨凮penLink閾炬帴
+    openLinkUrl: 'https://game.weixin.qq.com/cgi-bin/comm/openlink?noticeid=90196474&appid=wx18df700cb9d0652e&url=https%3A%2F%2Fmir.qq.com%2Fact%2F1010%2F721a4a4f29197a64%2Findex.html#wechat_redirect'
+});
+if( ulink.isWxApp() ){
+    $("#login_wx").show();
+}
+
+//0=>"灏忔偊鍎�",1=>"钀屽疂灏忕传閲�",2=>"浣冲効",3=>"娆ｆ",4=>"灏忛箍",5=>"瀵勫勾",6=>"鍕惧嬀",7=>"灏忚檸鐗�"
+var zhuBoInfo = [{
+    name: "灏忔偊鍎�",
+    shenGao: 170,
+    sanWei: "36D/65/98",
+    zhiboID: "351039226",
+    src: "ossweb-img/zb3.jpg",
+},
+{
+    name: "钀屽疂灏忕传閲�",
+    shenGao: 160,
+    sanWei: "86/65/90",
+    zhiboID: "275022",
+    src: "ossweb-img/zb5.jpg",
+},
+{
+    name: "浣冲効",
+    shenGao: 165,
+    sanWei: "95/69/97",
+    zhiboID: "358309536",
+    src: "ossweb-img/zb6.jpg",
+},
+{
+    name: "娆ｆ",
+    shenGao: 173,
+    sanWei: "96/88/88",
+    zhiboID: "199648443",
+    src: "ossweb-img/zb4.jpg",
+},
+{
+    name: "灏忛箍",
+    shenGao: 164,
+    sanWei: "86/60/90",
+    zhiboID: "173851088",
+    src: "ossweb-img/zb1.jpg",
+},
+{
+    name: "瀵勫勾",
+    shenGao: 160,
+    sanWei: "86/65/90",
+    zhiboID: "527712866",
+    src: "ossweb-img/zb2.jpg",
+},
+{
+    name: "鍕惧嬀",
+    shenGao: 170,
+    sanWei: "88/60/85",
+    zhiboID: "527501293",
+    src: "ossweb-img/zb8.jpg",
+},
+{
+    name: "灏忚檸鐗�",
+    shenGao: 162,
+    sanWei: "86/63/90",
+    zhiboID: "527553987",
+    src: "ossweb-img/zb7.jpg",
+},
+];
+
+
+
+
+
+//寮€濮嬫娊濂杔ottery->js
+function callJsToStart() {
+
+    if (userData == null) {
+        ulink.Dialog.alert("璇峰厛鐧婚檰浠ュ悗鍐嶆潵浣撻獙锛�");
+        return;
+    }
+    ulink.http.get({
+        url: url + '?route=Reward/selLottery&game=mir&iActId=1010',
+        success: function (res) {
+
+            console.log(res);
+
+            if (res.iRet != 0) {
+                ulink.Dialog.alert(res.sMsg);
+                ulink.setCookie(userData.openid, '1', 86400, window.location.host, "/");
+
+                return;
+            }
+            sMessage = res.sMsg;
+            calllotteryToRoll(res.jData.index);
+        },
+        error: function () {
+            alert("鍒濆鍖栧け璐�");
+            return;
+        }
+    });
+
+    PTTSendClick('lottery', 'start', '鎶藉_寮€濮�');
+}
+//寮€鍙戣幏寰楁娊濂栫粨鏋� 閫氱煡lottery寮€濮嬫挱鏀炬晥鏋� js->lottery
+function calllotteryToRoll(id) {
+
+
+    if (lottery) lottery.stopRoll(id);
+
+    PTTSendClick('lottery', 'reward_' + id, '鎶藉_濂栧搧_' + id);
+
+}
+//鍔ㄧ敾瀹屾垚閫氱煡js  lottery->js
+function callJsToComplete() {
+
+    ulink.Dialog.alert(sMessage);
+
+
+    PTTSendClick('lottery', 'end', '鎶藉_瀹屾瘯');
+}
+
+function loginClick(obj) {
+    var id = $(obj).attr("id");
+    if (id == "ptLoginBtn") LoginManager.login();
+    if (id == "wxloginBtn") LoginManager.loginByWx();
+   
+}
+function loginOut() {
+    LoginManager.logout(function () {
+        window.location.reload();
+    });
+}
+function clickLottery() {
+
+    callJsToStart();
+    //alert(11);
+
+    return;
+}
+function getAllRewardInfo() {
+    ulink.http.get({
+        url: url + '?route=Reward/getReward&game=mir&iActId=1010',
+        success: function (res) {
+            setRewardList(res);
+        },
+        error: function () {
+            alert("鍒濆鍖栧け璐�");
+            return;
+        }
+    });
+}
+getAllRewardInfo();
+
+function setRewardList(res) {
+
+
+
+    if (res.iRet) {
+        return;
+    }
+
+    $("#rewardlist").html("");
+
+
+    var strhtml = "";
+   
+    for (var i = 0; i < res.jData.length; i++) {
+        var msgData = JSON.parse(res.jData[i]);
+        console.log(msgData);
+
+        var data = zhuBoInfo[msgData.index];
+
+        strhtml += '<div class="ul-box">';
+        strhtml += '<p class="user-name flex"><span class="player">鐜╁</span> <span class="zhub">涓绘挱</span></p>';
+        strhtml += '<ul class="flex">';
+        strhtml += ' <li class="user-bg">';
+        strhtml += '<!--<img src="ossweb-img/zb1.jpg" alt="" />-->';
+        strhtml += ' <p class="day"><em>'+msgData.team +'</em>闃熼暱<br><em class="red">'+msgData.name +'</em></p>';
+        strhtml += '</li>';
+        strhtml += '<li  class="zb-bg">';
+        strhtml += ' <img src="' + data.src + '" alt="" />';
+        strhtml += '  <div class="zb-txt">';
+        strhtml += '  <b>' + data.name + '</b>';
+        strhtml += ' <p>韬珮锛�<br>' + data.shenGao + ' </br>涓夊洿锛�<br>' + data.sanWei + '</br>鐩存挱ID锛�</br>' + data.zhiboID + '</p>';
+        strhtml += '</div>';
+        strhtml += '</li>';
+        strhtml += '</ul>';
+        strhtml += '</div>';
+    }
+
+
+    $("#rewardlist").html(strhtml);
+   
+
+
+
+
+}
